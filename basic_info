@@ -1,0 +1,46 @@
+# 통계 - 주식 - 종목정보 - 전종목 기본정보
+# 표준코드, 종목코드, 종목명, 상장일, 주식종류를 데이터프레임 형식으로 반환
+
+import requests
+import json
+import pandas as pd
+
+def basic_info() :
+    BASE_URL = 'http://data.krx.co.kr/comm/bldAttendant/getJsonData.cmd'
+    headers = {
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'Accept-Encoding':'gzip, deflate',
+    'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+    'Connection': 'keep-alive',
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'Host': 'data.krx.co.kr',
+    'Origin': 'http://data.krx.co.kr',
+    'Referer': 'http://data.krx.co.kr/contents/MDC/MDI/mdiLoader/index.cmd?menuId=MDC0201',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome / 126.0.0.0 Safari/537.36',
+    'X-Requested-With': 'XMLHttpRequest'
+}
+    data = [
+        ('bld', 'dbms/MDC/STAT/standard/MDCSTAT01901'),
+        ('locale', 'ko_KR'),
+        ('mktId', 'ALL'),
+        ('share', '1'),
+        ('csvxls_isNo', 'false')
+        ]
+    res = requests.post(BASE_URL, headers=headers, data=data)
+    t = res.text
+    want_list = json.loads(t)['OutBlock_1']
+    print(want_list)
+    Data = []
+    for j in want_list:
+        if str(j['MKT_TP_NM']) == 'KONEX':
+            pass
+        else:
+            code = j['ISU_SRT_CD']
+            pj_code = j['ISU_CD']
+            name = j['ISU_ABBRV']
+            listing_date = j['LIST_DD']
+            mk = j['MKT_TP_NM']
+            kind = j['KIND_STKCERT_TP_NM']
+            Data.append([pj_code, code, name, listing_date, mk, kind])
+            df = pd.DataFrame(Data, columns=["표준코드", "종목코드", "종목명", "상장일", "시장구분", "주식종류"])
+    return df
