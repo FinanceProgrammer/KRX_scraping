@@ -1,0 +1,58 @@
+# 통계-기본통계-주식-종목시세-개별종목 시세 추이
+# basic_info 함수를 통해 표준코드를 얻어와서 해당 함수 사용 가능
+# ['날짜', '등락률', '시가', '고가', '저가', '종가', '전일종가', '거래량', '거래대금', '시가총액']
+
+import requests
+import json
+import pandas as pd
+
+def ind_stock(code, s_date, e_date, pj_code="KR7005930003") :
+    BASE_URL = 'http://data.krx.co.kr/comm/bldAttendant/getJsonData.cmd'
+    headers = {
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'Accept-Encoding':'gzip, deflate',
+    'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+    'Connection': 'keep-alive',
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'Host': 'data.krx.co.kr',
+    'Origin': 'http://data.krx.co.kr',
+    'Referer': 'http://data.krx.co.kr/contents/MDC/MDI/mdiLoader/index.cmd?menuId=MDC0201',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome / 123.0.0.0 Safari/537.36',
+    'X-Requested-With': 'XMLHttpRequest'
+}
+    data = [
+        ('bld', 'dbms/MDC/STAT/standard/MDCSTAT01701'),
+        ('locale', 'ko_KR'),
+        ('tboxisuCd_finder_stkisu0_0', "101360/에코앤드림"),
+        ('param1isuCd_finder_stkisu0_0', 'ALL'),
+        ('isuCd', pj_code),
+        ('strtDd', s_date),
+        ('endDd', e_date),
+        ('adjStkPrc_check', 'Y'),
+        ('adjStkPrc', '2'),
+        ('share', '1'),
+        ('money', '1'),
+        ('csvxls_isNo', 'false'),
+        ]
+    res = requests.post(BASE_URL, headers=headers, data=data)
+    t = res.text
+    want_list = json.loads(t)['output']
+    pl = []
+    for j in want_list:
+        date = j['TRD_DD']
+        ycp = cm(j['TDD_CLSPRC'])-cm(j['CMPPREVDD_PRC'])
+        r = float(j['FLUC_RT'])
+        op = cm(j['TDD_OPNPRC'])
+        hp = cm(j['TDD_HGPRC'])
+        lp = cm(j['TDD_LWPRC'])
+        cp = cm(j['TDD_CLSPRC'])
+        tv = cm(j['ACC_TRDVOL'])
+        t_val = cm(j["ACC_TRDVAL"])
+        mc = cm(j["MKTCAP"])
+        if tv == 0 :
+            pl.append([date, r, cp, cp, cp, cp, ycp, 0, 0, mc])
+        else :
+            pl.append([date, r, op, hp, lp, cp, ycp, tv, t_val, mc])
+    df = pd.DataFrame(pl, columns=['날짜', '등락률', '시가', '고가', '저가', '종가', '전일종가', '거래량', '거래대금', '시가총액'])
+    print(df)
+    return df
