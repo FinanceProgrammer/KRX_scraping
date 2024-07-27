@@ -1,0 +1,30 @@
+def design():
+    data = [
+        ('bld', 'dbms/MDC/STAT/standard/MDCSTAT02001'),
+        ('locale', 'ko_KR'),
+        ('mktId', 'ALL'),
+        ('csvxls_isNo', 'false'),
+        ]
+    res = requests.post(BASE_URL, headers=headers, data=data)
+    t = res.text
+    want_list = json.loads(t)['OutBlock_1']
+    Data = []
+    for j in want_list:
+        if str(j["MKT_ID"]) == 'KNX':
+            pass
+        else:
+            code = j['ISU_SRT_CD']
+            name = j['ISU_ABBRV']
+            a = j["HALT_YN"]                      # 거래정지
+            b = j["ARRANTRD_YN"]                  # 정리매매
+            c = j["ADMISU_YN"]                    # 관리
+            d = j["INVSTCAUTN_REMND_ISU_YN"]      # 투자주의환기
+            e = j["NFAITHDISCLS_YN"]              # 불성실공시
+            f = j["SRTTRM_OVERHEAT_ISU_TP_YN"]    # 단기과열
+            g = j["INVSTCAUTN_YN"]                # 투자주의
+            h = j["NVST_WARN_YN"]                 # 투자경고
+            i = j["NVST_RISK_YN"]                 # 투자위험
+            Data.append([code, name, a, b, c, d, e, f, g, h, i])
+    df = pd.DataFrame(Data, columns=["종목코드", "종목명", '거래정지', '정리매매', '관리', '투자주의환기',
+                                     '불성실공시', '단기과열', '투자주의', '투자경고', '투자위험'])
+    return df
