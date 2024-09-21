@@ -1,0 +1,102 @@
+import requests
+import json
+import pandas as pd
+import openpyxl
+
+def cm(n):
+    p = float(''.join(n.split(',')))
+    return p
+
+def sp(yp, p):
+    return round((p-yp)/yp*100, 5)
+
+def kospi_info(date_s, date_e) :
+    BASE_URL = 'http://data.krx.co.kr/comm/bldAttendant/getJsonData.cmd'
+    headers = {
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'Accept-Encoding':'gzip, deflate',
+    'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+    'Connection': 'keep-alive',
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'Host': 'data.krx.co.kr',
+    'Origin': 'http://data.krx.co.kr',
+    'Referer': 'http://data.krx.co.kr/contents/MDC/MDI/mdiLoader/index.cmd?menuId=MDC0201',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome / 128.0.0.0 Safari/537.36',
+    'X-Requested-With': 'XMLHttpRequest'
+}
+    data = [
+        ('bld', 'dbms/MDC/STAT/standard/MDCSTAT00301'),
+        ('locale', 'ko_KR'),
+        ('tboxindIdx_finder_equidx0_2', '코스피'),
+        ('indIdx', '1'),
+        ('indIdx2', '001'),
+        ('codeNmindIdx_finder_equidx0_2', '코스피'),
+        ('strtDd', date_s),
+        ('endDd', date_e),
+        ('share', '1'),
+        ('money', '1'),
+        ('csvxls_isNo', 'false')]
+
+    res = requests.post(BASE_URL, headers=headers, data=data)
+    t = res.text
+    want_list = json.loads(t)['output']
+    pl = []
+    for j in want_list:
+        date = ''.join(j['TRD_DD'].split('/'))
+        op = cm(j['OPNPRC_IDX'])
+        hp = cm(j['HGPRC_IDX'])
+        lp = cm(j['LWPRC_IDX'])
+        cp = cm(j['CLSPRC_IDX'])
+        r = cm(j['UPDN_RATE'])
+        t_vol = round(cm(j['ACC_TRDVOL']))
+        t_val = round(cm(j['ACC_TRDVAL'])/10000)
+        mk_cap = round(cm(j['MKTCAP'])/100000000)
+        pl.append([date, r, op, hp, lp, cp, t_vol, t_val, mk_cap])
+    df = pd.DataFrame(pl, columns=['날짜', '등락률', '시가', '고가', '저가', '종가', '거래량', '거래대금(만)', '시가총액(억)'])
+    return df
+
+
+def kosdaq_info(date_s, date_e) :
+    BASE_URL = 'http://data.krx.co.kr/comm/bldAttendant/getJsonData.cmd'
+    headers = {
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'Accept-Encoding':'gzip, deflate',
+    'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+    'Connection': 'keep-alive',
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'Host': 'data.krx.co.kr',
+    'Origin': 'http://data.krx.co.kr',
+    'Referer': 'http://data.krx.co.kr/contents/MDC/MDI/mdiLoader/index.cmd?menuId=MDC0201',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome / 128.0.0.0 Safari/537.36',
+    'X-Requested-With': 'XMLHttpRequest'
+}
+    data = [
+        ('bld', 'dbms/MDC/STAT/standard/MDCSTAT00301'),
+        ('locale', 'ko_KR'),
+        ('tboxindIdx_finder_equidx0_2', '코스닥'),
+        ('indIdx', '2'),
+        ('indIdx2', '001'),
+        ('codeNmindIdx_finder_equidx0_2', '코스닥'),
+        ('strtDd', date_s),
+        ('endDd', date_e),
+        ('share', '1'),
+        ('money', '1'),
+        ('csvxls_isNo', 'false')]
+
+    res = requests.post(BASE_URL, headers=headers, data=data)
+    t = res.text
+    want_list = json.loads(t)['output']
+    pl = []
+    for j in want_list:
+        date = ''.join(j['TRD_DD'].split('/'))
+        op = cm(j['OPNPRC_IDX'])
+        hp = cm(j['HGPRC_IDX'])
+        lp = cm(j['LWPRC_IDX'])
+        cp = cm(j['CLSPRC_IDX'])
+        r = cm(j['UPDN_RATE'])
+        t_vol = round(cm(j['ACC_TRDVOL']))
+        t_val = round(cm(j['ACC_TRDVAL'])/10000)
+        mk_cap = round(cm(j['MKTCAP'])/100000000)
+        pl.append([date, r, op, hp, lp, cp, t_vol, t_val, mk_cap])
+    df = pd.DataFrame(pl, columns=['날짜', '등락률', '시가', '고가', '저가', '종가', '거래량', '거래대금(만)', '시가총액(억)'])
+    return df
